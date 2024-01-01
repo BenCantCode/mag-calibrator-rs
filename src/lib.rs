@@ -1,4 +1,3 @@
-#![feature(sort_floats)]
 #![no_std]
 
 // use core::cmp::Ordering;
@@ -37,13 +36,13 @@ impl<const N: usize> MagCalibrator<N> {
     }
 
     /// Configure the number of `k` neighbors to calculate distance to
-    pub fn num_neighbors(self, k:usize) -> Self {
-        Self{k, ..self}
+    pub fn num_neighbors(self, k: usize) -> Self {
+        Self { k, ..self }
     }
 
     /// Configure sample pre scaler, prevents ill-conditioning
-    pub fn pre_scaler(self, pre_scaler:f32) -> Self {
-        Self{pre_scaler, ..self}
+    pub fn pre_scaler(self, pre_scaler: f32) -> Self {
+        Self { pre_scaler, ..self }
     }
 
     /// Calculates mean distance to the `k` nearest neighbors.
@@ -59,7 +58,7 @@ impl<const N: usize> MagCalibrator<N> {
         });
 
         // Sort floats and return mean distance to nearest neighbors
-        squared_dists.sort_floats();
+        squared_dists.sort_unstable_by(|a, b| a.partial_cmp(b).unwrap());
         squared_dists
             .iter()
             .take(self.k + 1)
@@ -89,7 +88,8 @@ impl<const N: usize> MagCalibrator<N> {
         self.mean_distance = mean_dist.iter().rfold(0., |a, &b| a + b) / N as f32;
 
         // Obtain index for lowest mean distance
-        mean_dist.iter()
+        mean_dist
+            .iter()
             .enumerate()
             .min_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(core::cmp::Ordering::Equal))
             .map(|(index, value)| (index, *value))
@@ -166,6 +166,6 @@ impl<const N: usize> MagCalibrator<N> {
         }
 
         // TODO Add option for low-pass filtering this result
-        Some((off,scale))
+        Some((off, scale))
     }
 }
